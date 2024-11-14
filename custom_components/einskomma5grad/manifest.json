@@ -1,7 +1,9 @@
 {
   "domain": "einskomma5grad",
-  "name": "1KOMMA5GRAD Home Assistant",
+  "name": "1KOMMA5GRAD",
   "codeowners": ["@BirknerAlex"],
+  "version": "0.0.1",
+  "issue_tracker": "https://github.com/BirknerAlex/homeassistant-integrations",,
   "dependencies": [""],
   "documentation": "https://1komma5.com/",
   "integration_type": "system",
