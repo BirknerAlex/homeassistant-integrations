@@ -1,0 +1,180 @@
+import requests
+import datetime
+import secrets
+import hashlib
+import base64
+
+from custom_components.einskomma5grad.api.error import AuthenticationError, RequestError
+
+
+class Api:
+    TOKEN_URL = "https://auth.1komma5grad.com/oauth/token"
+    CLIENT_ID = "zJTm6GFGM5zHcmpl07xTsi6MP0TwRAw6"
+    OAUTH0_CLIENT_ID = "eyJuYW1lIjoiYXV0aDAtZmx1dHRlciIsInZlcnNpb24iOiIxLjcuMiIsImVudiI6eyJzd2lmdCI6IjUueCIsImlPUyI6IjE4LjAiLCJjb3JlIjoiMi43LjIifX0"
+    REDIRECT_URL = "io.onecommafive.my.production.app://auth.1komma5grad.com/ios/io.onecommafive.my.production.app/callback"
+
+    HEARTBEAT_API = "https://heartbeat.1komma5grad.com"
+
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+
+        self.get_token()
+
+    def get_token(self):
+        session = requests.Session()
+
+        verifier = generate_code_verifier()
+        challenge = generate_code_challenge(verifier)
+
+        self.state = ""
+
+        # Authorize request
+        login_res = session.get("https://auth.1komma5grad.com/authorize",
+            params={
+                "scope": "openid profile email offline_access",
+                "client_id": self.CLIENT_ID,
+                "code_challenge": challenge,
+                "code_challenge_method": "S256",
+                "response_type": "code",
+                "audience": "https://1komma5grad.com/api",
+                "redirect_uri": self.REDIRECT_URL,
+                "state": self.state,
+                "auth0Client": self.OAUTH0_CLIENT_ID,
+                },
+        )
+
+        # Expecting status code 200 for successful request
+        if login_res.status_code != 200:
+            print(login_res.text)
+            raise AuthenticationError("Authorization request returned wrong status code: " + str(login_res.status_code))
+
+        # Get state from HTML response, it's inside a hidden input field
+        self.state = login_res.text.split('name="state" value="')[1].split('"')[0].strip()
+
+        # Make POST request to login
+        login_post_res = session.post(login_res.url, data={
+            "state": self.state,
+            "username": self.username,
+            "password": self.password,
+            "action": "default",
+        }, allow_redirects=False)
+
+        if login_post_res.status_code != 302:
+            raise AuthenticationError("Failed to login: " + login_post_res.text)
+
+        resume_url = "https://auth.1komma5grad.com" + login_post_res.headers["location"]
+        resume_res = session.get(resume_url, allow_redirects=False)
+
+        if resume_res.status_code != 302:
+            raise AuthenticationError("Failed to resume login: " + resume_res.text)
+
+        # Extract code from location header
+        code = resume_res.headers["location"].split("code=")[1]
+
+        # Make POST request to get token
+        res = requests.post(
+            url = self.TOKEN_URL,
+            json = {
+                "client_id": self.CLIENT_ID,
+                "code": code,
+                "code_verifier": verifier,
+                "grant_type": "authorization_code",
+                "redirect_uri": "io.onecommafive.my.production.app://auth.1komma5grad.com/ios/io.onecommafive.my.production.app/callback"
+            }
+        )
+
+        if res.status_code != 200:
+            raise AuthenticationError("Failed to get token: " + res.text)
+
+        self.token_set = res.json()
+
+        return self.token_set["access_token"]
+
+    def refresh_token(self):
+        if self.token_set is None:
+            raise AuthenticationError("No token set")
+
+        res = requests.post(
+            url = self.TOKEN_URL,
+            json = {
+                "client_id": self.CLIENT_ID,
+                "refresh_token": self.token_set["refresh_token"],
+                "grant_type": "refresh_token",
+            }
+        )
+
+        if res.status_code != 200:
+            raise AuthenticationError("Failed to refresh token: " + res.text)
+
+        self.token_set = res.json()
+
+        return self.token_set["access_token"]
+
+    # Returns a list with all systems the user has access to
+    def get_systems(self):
+        res = requests.get(
+            url = self.HEARTBEAT_API + "/api/v2/systems",
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + self.token_set["access_token"],
+            })
+
+        if res.status_code != 200:
+            raise RequestError("Failed to get systems: " + res.text)
+
+        systems = res.json()["data"]
+
+        # remove systems with id == "00000000-0000-0000-0000-000000000000"
+        systems = [system for system in systems if system["id"] != "00000000-0000-0000-0000-000000000000"]
+
+        return systems
+
+    def get_prices(self, system_id: str, start: datetime, end: datetime):
+        res = requests.get(
+            url = self.HEARTBEAT_API + "/api/v1/systems/"+ system_id +"/charts/market-prices",
+            params = {
+                "from": start.strftime("%Y-%m-%d"),
+                "to": end.strftime("%Y-%m-%d"),
+                "resolution": "1h",
+            },
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + self.token_set["access_token"],
+            })
+
+        if res.status_code != 200:
+            raise RequestError("Failed to get prices: " + res.text)
+
+        return res.json()['energyMarketWithGridCosts']['data']
+
+    def get_user(self):
+        res = requests.get(
+            url = "https://customer-identity.1komma5grad.com/api/v1/users/me",
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + self.token_set["access_token"],
+            })
+
+        if res.status_code != 200:
+            raise RequestError("Failed to get user: " + res.text)
+
+        return res.json()
+
+
+    def close(self):
+        pass
+
+
+def base64_url_encode(data):
+    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('utf-8')
+
+def generate_code_verifier():
+    verifier = secrets.token_urlsafe(32)
+    return verifier
+
+def generate_code_challenge(verifier):
+    sha256_hash = hashlib.sha256(verifier.encode('utf-8')).digest()
+    challenge = base64_url_encode(sha256_hash)
+    return challenge
+
