@@ -10,9 +10,9 @@ from homeassistant.components.ios import CONF_USER
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
-from .api.error import TokenError
-from .const import DOMAIN
-from .api.client import Client
+from api.error import TokenError
+from const import DOMAIN
+from api.client import Client
 
 DATA_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): str,
@@ -26,8 +26,8 @@ ERR_TOKEN = "invalid_access_token"
 
 class HeartbeatConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for 1KOMMA5GRAD integration."""
-
     VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
             self, user_input: dict[str, Any] | None = None
@@ -48,7 +48,7 @@ class HeartbeatConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = {}
 
             try:
-                await api_connection.get_token()
+                api_connection.get_token()
             except TokenError:
                 errors[CONF_USERNAME] = ERR_TOKEN
                 errors[CONF_PASSWORD] = ERR_TOKEN
