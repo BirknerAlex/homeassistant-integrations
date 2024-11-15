@@ -12,6 +12,8 @@ This integration is not related to 1KOMMA5GRAD and not officially supported by t
 This integration is for the 1KOMMA5GRAD Heartbeat Device Model 2024 (gen 2). If you
 still using the first generation of the device, this integration will not work for you.
 
+If you still running the first generation, please take a look into https://github.com/derlangemarkus/1komma5grad_ha.
+
 ## Contribute
 
 If you want to contribute to this project, please have a look at the [CONTRIBUTE.md](CONTRIBUTE.md) file.
