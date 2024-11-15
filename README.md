@@ -5,6 +5,8 @@
 This is a custom integration for [Home Assistant](https://www.home-assistant.io/) to integrate 1KOMMA5GRAD 
 into your Home Assistant instance.
 
+This integration is not related to 1KOMMA5GRAD and not officially supported by them.
+
 ## Supported devices
 
 This integration is for the 1KOMMA5GRAD Heartbeat Device Model 2024 (gen 2). If you
