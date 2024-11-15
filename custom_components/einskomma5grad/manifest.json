@@ -7,7 +7,7 @@
   "issue_tracker": "https://github.com/BirknerAlex/homeassistant-integrations",
   "dependencies": ["PyJWT==2.9.0", "requests"],
   "documentation": "https://1komma5.com/",
-  "integration_type": "system",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["einskomma5grad"],
   "requirements": []
