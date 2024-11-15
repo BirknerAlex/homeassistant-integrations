@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api.error import ApiError
 from .const import DATA_HASS_CONFIG, DOMAIN, LOGGER_NAME
-from .services import async_setup_services
+from .service import async_setup_services
 
 from .api.client import Api
 

@@ -2,6 +2,7 @@
   "domain": "einskomma5grad",
   "name": "1KOMMA5GRAD",
   "codeowners": ["@BirknerAlex"],
+  "config_flow": true,
   "version": "0.0.1",
   "issue_tracker": "https://github.com/BirknerAlex/homeassistant-integrations",
   "dependencies": [""],
