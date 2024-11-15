@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/BirknerAlex/hacs_1komma5grad/master/images/icon.png" alt="1KOMMA5GRAD Logo" title="1KOMMA5GRAD Home Assistant Integration" align="right" height="60" />
+<img src="https://raw.githubusercontent.com/BirknerAlex/hacs_1komma5grad/main/images/icon.png" alt="1KOMMA5GRAD Logo" title="1KOMMA5GRAD Home Assistant Integration" align="right" height="60" />
 
 # 1KOMMA5GRAD Home Assistant Integration
 
