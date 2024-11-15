@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 from .api.error import TokenError
 from .const import DOMAIN
-from .api.client import Api
+from .api.client import Client
 
 DATA_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): str,
@@ -40,7 +40,7 @@ class IntegrationConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USER].replace(" ", "")
             password = user_input[CONF_PASSWORD].replace(" ", "")
 
-            api_connection = Api(
+            api_connection = Client(
                 username=username,
                 password=password,
             )

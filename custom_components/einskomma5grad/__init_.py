@@ -13,7 +13,7 @@ from .api.error import ApiError
 from .const import DATA_HASS_CONFIG, DOMAIN, LOGGER_NAME
 from .service import async_setup_services
 
-from .api.client import Api
+from .api.client import Client
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
 
-    api_connection =  Api(
+    api_connection =  Client(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
     )
