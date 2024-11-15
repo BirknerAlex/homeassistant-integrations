@@ -16,6 +16,7 @@ def main():
 
     for system in systems:
         print(system.id())
+        print(system.set_ems_mode(True))
 
 if __name__ == "__main__":
     main()
