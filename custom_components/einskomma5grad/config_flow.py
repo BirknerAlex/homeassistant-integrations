@@ -24,7 +24,7 @@ ERR_CLIENT = "cannot_connect"
 ERR_TOKEN = "invalid_access_token"
 
 
-class IntegrationConfigFlow(ConfigFlow, domain=DOMAIN):
+class HeartbeatConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for 1KOMMA5GRAD integration."""
 
     VERSION = 1

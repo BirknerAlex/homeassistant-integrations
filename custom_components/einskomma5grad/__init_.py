@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .api.error import ApiError
-from .const import DATA_HASS_CONFIG, DOMAIN, LOGGER_NAME
+from .const import DOMAIN, LOGGER_NAME
 from .service import async_setup_services
 
 from .api.client import Client
@@ -21,10 +21,13 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(LOGGER_NAME)
 
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    return True
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     """Set up the 1KOMMA5GRAD component."""
-    hass.data[DATA_HASS_CONFIG] = config
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN] = config
 
     async_setup_services(hass)
 
@@ -33,7 +36,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-
     api_connection =  Client(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
@@ -65,3 +67,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry."""
+    await async_unload_entry(hass, entry)
+    await async_setup_entry(hass, entry)
