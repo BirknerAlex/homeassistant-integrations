@@ -6,8 +6,8 @@
   "version": "0.0.1",
   "issue_tracker": "https://github.com/BirknerAlex/hacs_1komma5grad/issues",
   "dependencies": [
-    "PyJWT",
-    "requests"
+    "PyJWT==2.9.0",
+    "requests==2.32.3"
   ],
   "documentation": "https://1komma5.com/",
   "integration_type": "hub",
