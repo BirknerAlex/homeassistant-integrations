@@ -1,4 +1,0 @@
-homeassistant~=2024.11.1
-requests~=2.32.3
-voluptuous~=0.15.2
-PyJWT==2.9.0
