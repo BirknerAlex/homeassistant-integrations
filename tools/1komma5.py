@@ -12,7 +12,12 @@ def main():
 
     api_client = Api(username, password)
 
+
+
+    print(api_client.get_token())
+    print(api_client.get_token_parsed())
     print(api_client.get_user())
+    print(api_client.get_systems())
 
     systems = api_client.get_systems()
 
@@ -23,6 +28,7 @@ def main():
     prices =  api_client.get_prices(system["id"], start, end)
 
     print(prices)
+    print(api_client.close())
 
 if __name__ == "__main__":
     main()

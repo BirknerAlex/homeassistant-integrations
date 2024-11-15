@@ -5,7 +5,7 @@
   "config_flow": true,
   "version": "0.0.1",
   "issue_tracker": "https://github.com/BirknerAlex/homeassistant-integrations",
-  "dependencies": [""],
+  "dependencies": ["PyJWT==2.9.0", "requests"],
   "documentation": "https://1komma5.com/",
   "integration_type": "system",
   "iot_class": "cloud_polling",

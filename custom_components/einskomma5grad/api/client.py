@@ -3,12 +3,16 @@ import datetime
 import secrets
 import hashlib
 import base64
+import jwt
+from jwt import PyJWKClient
 
 from custom_components.einskomma5grad.api.error import AuthenticationError, RequestError
 
 
 class Api:
     TOKEN_URL = "https://auth.1komma5grad.com/oauth/token"
+    AUDIENCE = "https://1komma5grad.com/api"
+    JWKS_URL = "https://auth.1komma5grad.com/.well-known/jwks.json"
     CLIENT_ID = "zJTm6GFGM5zHcmpl07xTsi6MP0TwRAw6"
     OAUTH0_CLIENT_ID = "eyJuYW1lIjoiYXV0aDAtZmx1dHRlciIsInZlcnNpb24iOiIxLjcuMiIsImVudiI6eyJzd2lmdCI6IjUueCIsImlPUyI6IjE4LjAiLCJjb3JlIjoiMi43LjIifX0"
     REDIRECT_URL = "io.onecommafive.my.production.app://auth.1komma5grad.com/ios/io.onecommafive.my.production.app/callback"
@@ -16,12 +20,43 @@ class Api:
     HEARTBEAT_API = "https://heartbeat.1komma5grad.com"
 
     def __init__(self, username, password):
+        self.jwks_client = PyJWKClient(self.JWKS_URL)
+        self.state = None
+        self.token_set = None
+
         self.username = username
         self.password = password
 
-        self.get_token()
+    def get_token_parsed(self) -> jwt.PyJWT:
+        signing_key = self.jwks_client.get_signing_key_from_jwt(self.token_set["access_token"])
+        return jwt.decode(
+            jwt=self.token_set["access_token"],
+            key=signing_key,
+            options={"verify_exp": True},
+            audience=self.AUDIENCE,
+            algorithms=["RS256"],
+        )
 
-    def get_token(self):
+    # Returns True if the token is expiring in less than 'before' seconds
+    def is_token_expiring(self, before: int) -> bool:
+        if self.token_set is None:
+            return True
+
+        token = self.get_token_parsed()
+
+        return token["exp"] - before < datetime.datetime.now().timestamp()
+
+    def get_token(self) -> str:
+        if self.token_set is None:
+            return self.login()
+
+        # Check for expiration and refresh token
+        if self.is_token_expiring(60):
+            return self.refresh_token()
+
+        return self.token_set["access_token"]
+
+    def login(self) -> str:
         session = requests.Session()
 
         verifier = generate_code_verifier()
@@ -37,7 +72,7 @@ class Api:
                 "code_challenge": challenge,
                 "code_challenge_method": "S256",
                 "response_type": "code",
-                "audience": "https://1komma5grad.com/api",
+                "audience": self.AUDIENCE,
                 "redirect_uri": self.REDIRECT_URL,
                 "state": self.state,
                 "auth0Client": self.OAUTH0_CLIENT_ID,
@@ -91,7 +126,7 @@ class Api:
 
         return self.token_set["access_token"]
 
-    def refresh_token(self):
+    def refresh_token(self) -> str:
         if self.token_set is None:
             raise AuthenticationError("No token set")
 
@@ -117,7 +152,7 @@ class Api:
             url = self.HEARTBEAT_API + "/api/v2/systems",
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + self.token_set["access_token"],
+                "Authorization": "Bearer " + self.get_token(),
             })
 
         if res.status_code != 200:
@@ -140,7 +175,7 @@ class Api:
             },
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + self.token_set["access_token"],
+                "Authorization": "Bearer " + self.get_token(),
             })
 
         if res.status_code != 200:
@@ -153,7 +188,7 @@ class Api:
             url = "https://customer-identity.1komma5grad.com/api/v1/users/me",
             headers = {
                 "Content-Type": "application/json",
-                "Authorization": "Bearer " + self.token_set["access_token"],
+                "Authorization": "Bearer " + self.get_token(),
             })
 
         if res.status_code != 200:
@@ -163,7 +198,15 @@ class Api:
 
 
     def close(self):
-        pass
+        res = requests.get(
+            url="https://auth.1komma5grad.com/v2/logout",
+            params={"client_id": self.CLIENT_ID},
+            allow_redirects=False)
+
+        if res.status_code >= 400:
+            raise RequestError("Failed to logout: " + res.text)
+
+        self.token_set = None
 
 
 def base64_url_encode(data):

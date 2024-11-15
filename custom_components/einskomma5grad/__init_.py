@@ -15,7 +15,7 @@ from .service import async_setup_services
 
 from .api.client import Api
 
-PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(LOGGER_NAME)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the 1KOMMA5GRAD component."""
-
     hass.data[DATA_HASS_CONFIG] = config
 
     async_setup_services(hass)
@@ -47,8 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     try:
-        await api_connection.get_token()
-
+        await api_connection.get_user()
     except (
             TimeoutError,
     ) as err:
