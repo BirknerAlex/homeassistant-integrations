@@ -15,8 +15,7 @@ def main():
     systems = Systems(api_client).get_systems()
 
     for system in systems:
-        print(system.id())
-        print(system.set_ems_mode(True))
+        print(system.get_prices(datetime.datetime.now(), datetime.datetime.now() + datetime.timedelta(days=1)))
 
 if __name__ == "__main__":
     main()

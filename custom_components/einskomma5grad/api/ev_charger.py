@@ -1,7 +1,6 @@
 from enum import Enum
 
 from custom_components.einskomma5grad.api.client import Client
-from custom_components.einskomma5grad.api.system import System
 
 class ChargingMode(Enum):
     SMART_CHARGE = "SMART_CHARGE"
@@ -9,7 +8,7 @@ class ChargingMode(Enum):
     SOLAR_CHARGE = "SOLAR_CHARGE"
 
 class EVCharger:
-    def __init__(self, api: Client, system: System, data: dict):
+    def __init__(self, api: Client, system, data: dict):
         self._api = api
         self._data = data
 
