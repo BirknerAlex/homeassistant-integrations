@@ -8,8 +8,7 @@ from jwt import PyJWKClient
 
 from custom_components.einskomma5grad.api.error import AuthenticationError, RequestError
 
-
-class Api:
+class Client:
     TOKEN_URL = "https://auth.1komma5grad.com/oauth/token"
     AUDIENCE = "https://1komma5grad.com/api"
     JWKS_URL = "https://auth.1komma5grad.com/.well-known/jwks.json"
@@ -145,43 +144,6 @@ class Api:
         self.token_set = res.json()
 
         return self.token_set["access_token"]
-
-    # Returns a list with all systems the user has access to
-    def get_systems(self):
-        res = requests.get(
-            url = self.HEARTBEAT_API + "/api/v2/systems",
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + self.get_token(),
-            })
-
-        if res.status_code != 200:
-            raise RequestError("Failed to get systems: " + res.text)
-
-        systems = res.json()["data"]
-
-        # remove systems with id == "00000000-0000-0000-0000-000000000000"
-        systems = [system for system in systems if system["id"] != "00000000-0000-0000-0000-000000000000"]
-
-        return systems
-
-    def get_prices(self, system_id: str, start: datetime, end: datetime):
-        res = requests.get(
-            url = self.HEARTBEAT_API + "/api/v1/systems/"+ system_id +"/charts/market-prices",
-            params = {
-                "from": start.strftime("%Y-%m-%d"),
-                "to": end.strftime("%Y-%m-%d"),
-                "resolution": "1h",
-            },
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + self.get_token(),
-            })
-
-        if res.status_code != 200:
-            raise RequestError("Failed to get prices: " + res.text)
-
-        return res.json()['energyMarketWithGridCosts']['data']
 
     def get_user(self):
         res = requests.get(
