@@ -4,7 +4,7 @@
   "codeowners": ["@BirknerAlex"],
   "config_flow": true,
   "version": "0.0.1",
-  "issue_tracker": "https://github.com/BirknerAlex/homeassistant-integrations",
+  "issue_tracker": "https://github.com/BirknerAlex/hacs_1komma5grad/issues",
   "dependencies": [
     "PyJWT",
     "requests"
